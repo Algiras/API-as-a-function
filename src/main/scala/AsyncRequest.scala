@@ -1,13 +1,16 @@
+import other.Authorization
 import other.Base._
-import other.Translator
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 object AsyncRequest {
-  type HttpApp = Request => Future[Response]
-  val translate: HttpApp = {
-    case Request(POST, Uri("/translate"), text) =>
-      Translator.future(text).map(Response(OK, _))
+  type HttpHandler = Request => Future[Response]
+  val translate: HttpHandler = {
+    case Request(POST, Uri("/hello"), headers, text) =>
+      Authorization.future(headers.get("Authorization")).map(username => {
+        username.map(u => Response(OK, body = s"hello $u. $text")).getOrElse(Response(Unauthorized))
+      })
     case _ => Future.successful(Response(NotFound))
   }
 }

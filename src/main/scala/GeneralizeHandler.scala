@@ -8,11 +8,11 @@ import other.Translator
 
 import scala.language.higherKinds
 
-object GeneralizeService {
+object GeneralizeHandler {
   type Http[F[_]] = Kleisli[F, Request, Response]
-  type HttpApp[F[_]] = Http[F]
+  type HttpHandler[F[_]] = Http[F]
   object HttpApp {
-    def apply[F[_]](f: Request => F[Response]): HttpApp[F] = new HttpApp[F](f)
+    def apply[F[_]](f: Request => F[Response]): HttpHandler[F] = new HttpHandler[F](f)
   }
 
   def translate[F[_]: Monad](app: Http[F]): Http[F] = for {
@@ -21,8 +21,8 @@ object GeneralizeService {
   } yield resp.copy(body = tx)
 
   def hello[F[_]: Sync](theUri: Uri): HttpRoutes[F] = HttpRoutes.of[F] {
-    case Request(POST, uri, name) if uri == theUri =>
-      Response(OK, s"Hello $name").pure[F]
+    case Request(POST, uri, _, name) if uri == theUri =>
+      Response(OK, body = s"Hello $name").pure[F]
   }
 
   type IOOption[A] = OptionT[IO, A]
@@ -37,7 +37,7 @@ object GeneralizeService {
     }
   }
 
-  def seal[F[_]: Sync](routes: HttpRoutes[F]): HttpApp[F] = HttpApp[F]((req: Request) => routes(req).fold(Response(NotFound))(identity))
+  def seal[F[_]: Sync](routes: HttpRoutes[F]): HttpHandler[F] = HttpApp[F]((req: Request) => routes(req).fold(Response(NotFound))(identity))
 
 
   def log[F[_]: Sync](app: Http[F]): Http[F] = {
@@ -47,6 +47,7 @@ object GeneralizeService {
   def en[F[_]: Sync]: HttpRoutes[F] = hello[F](Uri("/hello"))
   def es[F[_]: Sync]: HttpRoutes[F] = translate(hello(Uri("/holla")))
 
-  val appIO: HttpApp[IO] = seal(en[IO].combineK(log(es[IO])))
-  val appTask: HttpApp[Task] = seal(en[Task].combineK(log(es[Task])))
+  val appIO: HttpHandler[IO] = seal(en[IO].combineK(log(es[IO])))
+  val appTask: HttpHandler[Task] = seal(en[Task].combineK(log(es[Task])))
+  def app[T[_]: Sync]: HttpHandler[T] = seal(en[T].combineK(log(es[T])))
 }

@@ -11,10 +11,10 @@ Repository for presentation at Wix.com.
 - [FirstTry](/src/main/scala/FirstTry.scala) ([tests](/src/test/scala/FirstTryTest.scala))
 - [AsyncRequest](/src/main/scala/AsyncRequest.scala) ([tests](/src/test/scala/AsyncRequestTest.scala))
 - [Combine](/src/main/scala/Combine.scala) ([tests](/src/test/scala/CombineTest.scala))
-- [ComposeHttpApp](/src/main/scala/ComposeHttpApp.scala) ([tests](/src/test/scala/ComposeHttpAppTest.scala))
+- [ComposeHttpApp](/ComposeRequestHandler.scala) ([tests](/src/test/scala/ComposeHttpAppTest.scala))
 - [ComposeHttpRoutes](/src/main/scala/ComposeHttpRoutes.scala) ([tests](/src/test/scala/ComposeHttpRoutesTest.scala))
-- [IOService](/src/main/scala/IOService.scala) ([tests](/src/test/scala/IOServiceTest.scala))
-- [GeneralizeService](/src/main/scala/GeneralizeService.scala) ([tests](/src/test/scala/GeneralizeServiceTest.scala))
+- [IOService](/HandlerUsingIO.scala) ([tests](/src/test/scala/IOServiceTest.scala))
+- [GeneralizeService](/GeneralizeHandler.scala) ([tests](/src/test/scala/GeneralizeServiceTest.scala))
 
 ## Prerequisite readings
 

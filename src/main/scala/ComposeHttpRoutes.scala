@@ -9,10 +9,11 @@ import scala.concurrent.Future
 import scala.language.higherKinds
 
 object ComposeHttpRoutes {
-  type Http[F[_]] = Kleisli[F, Request, Response]
-  type HttpApp = Http[Future]
-  object HttpApp {
-    def apply(f: Request => Future[Response]): HttpApp = new HttpApp(f)
+  type Http[F[_]] = Kleisli[F, Request, Response] // Request => F[Response]
+  type AsyncHttp = Http[Future]
+
+  object HttpHandler {
+    def apply(f: Request => Future[Response]): AsyncHttp = new AsyncHttp(f)
   }
 
   def translate[F[_]: Monad](app: Http[F]): Http[F] = for {
@@ -21,16 +22,18 @@ object ComposeHttpRoutes {
   } yield resp.copy(body = tx)
 
   def hello(theUri: Uri): HttpRoutes = HttpRoutes.of {
-    case Request(POST, uri, name) if uri == theUri =>
-      Future.successful(Response(OK, s"Hello $name"))
+    case Request(POST, uri, _, name) if uri == theUri =>
+      Future.successful(Response(OK, body = s"Hello $name"))
   }
 
   type FutureOption[A] = OptionT[Future, A]
+
   object FutureOption {
     def apply[A](value: Future[Option[A]]): FutureOption[A] = new OptionT[Future, A](value)
   }
 
   type HttpRoutes = Http[FutureOption]
+
   object HttpRoutes {
     def of(pf: PartialFunction[Request, Future[Response]]): HttpRoutes = {
       Kleisli((req: Request) => pf.lift(req) match {
@@ -40,7 +43,8 @@ object ComposeHttpRoutes {
     }
   }
 
-  def seal(routes: HttpRoutes): HttpApp = HttpApp((req: Request) => routes(req).fold(Response(NotFound))(identity))
+
+  def seal(routes: HttpRoutes): AsyncHttp = HttpHandler((req: Request) => routes(req).fold(Response(NotFound))(identity))
 
   def app = seal(translate(hello(Uri("/hello"))))
 
@@ -50,11 +54,11 @@ object ComposeHttpRoutes {
   val en: HttpRoutes = hello(Uri("/hello"))
   val es: HttpRoutes = translate(hello(Uri("/holla")))
 
-  val app3: HttpApp = seal(en.combineK(es))
+  val app3: AsyncHttp = seal(en.combineK(es))
 
-  def log[F[_]: Monad](app: Http[F]): Http[F] = {
+  def log[F[_] : Monad](app: Http[F]): Http[F] = {
     app.mapF(Monad[F].pure(println("Translating!")) *> _)
   }
 
-  val app4: HttpApp = seal(en.combineK(log(es)))
+  val app4: AsyncHttp = seal(en.combineK(log(es)))
 }

@@ -1,10 +1,10 @@
 import other.Base._
 
 object FirstTry {
-  type HttpApp = Request => Response
-  val helloWorld: HttpApp = {
-    case Request(POST, Uri("/hello"), name) =>
-      Response(OK, s"Hello, $name!")
+  type HttpHandler = Request => Response
+  val helloWorld: HttpHandler = {
+    case Request(POST, Uri("/hello"), _, name) =>
+      Response(OK, body = s"Hello, $name!")
     case _ => Response(NotFound)
   }
 }

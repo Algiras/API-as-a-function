@@ -8,11 +8,11 @@ import cats.implicits._
 import other.Translator
 import scala.language.higherKinds
 
-object IOService {
+object HandlerUsingIO {
   type Http[F[_]] = Kleisli[F, Request, Response]
-  type HttpApp = Http[IO]
+  type HttpHandler = Http[IO]
   object HttpApp {
-    def apply(f: Request => IO[Response]): HttpApp = new HttpApp(f)
+    def apply(f: Request => IO[Response]): HttpHandler = new HttpHandler(f)
   }
 
   def translate[F[_]: Monad](app: Http[F]): Http[F] = for {
@@ -21,8 +21,8 @@ object IOService {
   } yield resp.copy(body = tx)
 
   def hello(theUri: Uri): HttpRoutes = HttpRoutes.of {
-    case Request(POST, uri, name) if uri == theUri =>
-      IO(Response(OK, s"Hello $name"))
+    case Request(POST, uri, _, name) if uri == theUri =>
+      IO(Response(OK, body = s"Hello $name"))
   }
 
   type IOOption[A] = OptionT[IO, A]
@@ -40,7 +40,7 @@ object IOService {
     }
   }
 
-  def seal(routes: HttpRoutes): HttpApp = HttpApp((req: Request) => routes(req).fold(Response(NotFound))(identity))
+  def seal(routes: HttpRoutes): HttpHandler = HttpApp((req: Request) => routes(req).fold(Response(NotFound))(identity))
 
 
   def log[F[_]: Sync](app: Http[F]): Http[F] = {
@@ -50,6 +50,6 @@ object IOService {
   val en: HttpRoutes = hello(Uri("/hello"))
   val es: HttpRoutes = translate(hello(Uri("/holla")))
 
-  val app: HttpApp = seal(en.combineK(log(es)))
+  val app: HttpHandler = seal(en.combineK(log(es)))
 
   }

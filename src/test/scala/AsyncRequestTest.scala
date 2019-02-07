@@ -1,6 +1,7 @@
 import other.Base._
 import org.specs2.mutable.Specification
 import org.specs2.concurrent.ExecutionEnv
+import other.Authorization
 
 class AsyncRequestTest(implicit ee: ExecutionEnv) extends Specification {
   "Async Request" >> {
@@ -9,8 +10,10 @@ class AsyncRequestTest(implicit ee: ExecutionEnv) extends Specification {
     }
 
     "hello service works" >> {
-      val name = "Bob"
-      AsyncRequest.translate(Request(POST, Uri("/translate"), name)) must ===(Response(OK, name + "!")).await
+      val text = "Some text"
+      val headers = Map("Authorization" -> Authorization.encoder("user", "password"))
+      AsyncRequest.translate(Request(POST, Uri("/hello"), headers, text)) must ===(Response(OK, body = s"hello user. $text")).await
+      AsyncRequest.translate(Request(POST, Uri("/hello"), body = text)) must ===(Response(Unauthorized)).await
     }
   }
 }

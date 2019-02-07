@@ -8,7 +8,7 @@ class FirstTryTest extends Specification {
     }
     "hello service works" >> {
       val name = "Bob"
-      FirstTry.helloWorld(Request(POST, Uri("/hello"), name)) must_=== Response(OK, "Hello, Bob!")
+      FirstTry.helloWorld(Request(POST, Uri("/hello"), body = name)) must_=== Response(OK, body = "Hello, Bob!")
     }
   }
 }
