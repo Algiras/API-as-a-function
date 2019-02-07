@@ -28,7 +28,7 @@ Repository for presentation at Wix.com.
 ## Links
 
 - [Original talk](https://www.youtube.com/watch?v=urdtmx4h5LE) this presentation is based on 
-- [http4s](https://http4s.org/) - approach this presentation is based on
+- [http4s](https://http4s.org/) approach this presentation is based on
 - Libraries used:
   - [Cats](https://typelevel.org/cats/typeclasses.html)
   - [Cats Effects](https://typelevel.org/cats-effect/datatypes/)
